@@ -1,4 +1,3 @@
-import copy
 import random
 
 
@@ -34,7 +33,6 @@ def check_win(x_o_matrix):
     for i in range(3):
         if ''.join(x_o_matrix[i][0]) == ''.join(x_o_matrix[i][1]) == ''.join(x_o_matrix[i][2]) and "_" not in \
                 x_o_matrix[i]:
-            # prin_x_o(x_o_matrix)
             print(f'{x_o_matrix[i][0]} wins')
             quit['exit1'] = False
             return True
@@ -46,24 +44,18 @@ def check_win(x_o_matrix):
             return True
         elif ''.join(x_o_matrix[0][0]) == ''.join(x_o_matrix[1][1]) == ''.join(x_o_matrix[2][2]) and ''.join(
                 x_o_matrix[0][0]) != "_":
-            # prin_x_o(x_o_matrix)
             print(f'{x_o_matrix[0][0]} wins')
             quit['exit1'] = False
             return True
         elif ''.join(x_o_matrix[2][0]) == ''.join(x_o_matrix[1][1]) == ''.join(x_o_matrix[0][2]) and ''.join(
                 x_o_matrix[2][0]) != "_":
-            # prin_x_o(x_o_matrix)
             print(f'{x_o_matrix[2][0]} wins')
             quit['exit1'] = False
             return True
         elif all(([j != '_' for i in x_o_matrix for j in i])) and i == 2:
-            # prin_x_o(x_o_matrix)
             print('Draw')
             quit['exit1'] = False
             return 'True'
-        # elif i == 2:
-        #     prin_x_o(x_o_matrix)
-        #     print('Game not finished')
 
 
 def prin_x_o(x_o_matrix):
@@ -80,7 +72,7 @@ def system_choice(x_o_matrix, str):
         if x_o_matrix[x][y] == '_':
             x_o_matrix[x][y] = str
             print('Making move level "easy"')
-            break
+            return f'{x} {y}'
 
 
 def player_choice(x_o_matrix):
@@ -148,68 +140,146 @@ def get_empty_spot(x_o_list):
     new_x_o_matrix = x_o_list.copy()
     for i in range(3):
         for j in range(3):
-            print(new_x_o_matrix[i][j], 'new_x_o_matrix[i][j]', i, j)
             if new_x_o_matrix[i][j] == '_':
                 empty_spot_list.append(f'{i} {j}')
-    print(empty_spot_list, 'empty matrix')
-
     return empty_spot_list
 
 
-def system_difficult_choice(new_x_o_matrix):
-    other_spot_dict = {}
-    score_list = []
-    # print(x_o_matrix == new_x_o_matrix)
-    score_spot_dict = dict()
-    print(new_x_o_matrix, del_list, 'new list and old list')
-    empty_spot_list = get_empty_spot(new_x_o_matrix)
-    if len(empty_spot_list) == 0:
-        return 0
+def minmax(new_x_o_matrix, depth):
+    score_dict = []
+    empty_spot = get_empty_spot(new_x_o_matrix)
+    for i in empty_spot:
+        x = int(i.split()[0])
+        y = int(i.split()[1])
+        if count_x_o(new_x_o_matrix) == 'X':
+            new_x_o_matrix[x][y] = 'X'
+            if check_win(new_x_o_matrix) == True:
+                new_x_o_matrix[x][y] = '_'
+                return {'10': i}
+            elif check_win(new_x_o_matrix) == 'True':
+                new_x_o_matrix[x][y] = '_'
+                return {'0': i}
+            else:
+                score_dict.append(minmax(new_x_o_matrix, depth + 1))
+                new_x_o_matrix[x][y] = '_'
+
+        else:
+            new_x_o_matrix[x][y] = 'O'
+            if check_win(new_x_o_matrix) == True:
+                new_x_o_matrix[x][y] = '_'
+                return {'-10': i}
+            elif check_win(new_x_o_matrix) == 'True':
+                new_x_o_matrix[x][y] = '_'
+                return {'0': i}
+            else:
+                score_dict.append(minmax(new_x_o_matrix, depth + 1))
+                new_x_o_matrix[x][y] = '_'
+
+    if score_dict:
+        if count_x_o(new_x_o_matrix) == 'X':
+            then_list = []
+            zero_list = []
+            neg_then_list = []
+            for i in score_dict:
+                if '10' in i:
+                    then_list.append(i)
+                elif '0' in i:
+                    zero_list.append(i)
+                else:
+                    neg_then_list.append(i)
+            if then_list:
+                return then_list[0]
+            if zero_list:
+                return zero_list[0]
+            return neg_then_list[0]
+        if count_x_o(new_x_o_matrix) == 'O':
+            then_list = []
+            zero_list = []
+            neg_then_list = []
+            for i in score_dict:
+                if '-10' in i:
+                    neg_then_list.append(i)
+                if '0' in i:
+                    zero_list.append(i)
+                else:
+                    then_list.append(i)
+            if neg_then_list:
+                return neg_then_list[0]
+            if zero_list:
+                return zero_list[0]
+            return then_list[0]
+
+
+def system_difficult_choice(new_x_o_matrix, str_):
+    depth = 0
+    score_dict = {10: [], -10: [], 0: []}
+    empty_spot = get_empty_spot(new_x_o_matrix)
+    if len(empty_spot) == 9:
+        return system_choice(new_x_o_matrix, 'X')
     else:
-        for i in empty_spot_list:
+        for i in empty_spot:
             x = int(i.split()[0])
             y = int(i.split()[1])
-            if count_x_o(new_x_o_matrix) == 'X':
-                print('x starts', i)
-                new_x_o_matrix[x][y] = count_x_o(new_x_o_matrix)
-                if check_win(new_x_o_matrix) == True:
-                    print('x wins')
-                    score_spot_dict[10] = i
-                    return score_spot_dict
-                elif check_win(new_x_o_matrix) == 'True':
-                    print('x draw')
-                    score_spot_dict[0] = i
-                    return score_spot_dict
-                else:
-                    print('khoesho seda zad ', i)
-                    score_list.append(system_difficult_choice(new_x_o_matrix))
+            new_x_o_matrix[x][y] = str_
+            if check_win(new_x_o_matrix) == True:
+                score_dict[10].append(i)
+            elif check_win(new_x_o_matrix) == 'True':
+                score_dict[0].append(i)
             else:
-                print('O starts', i)
-                new_x_o_matrix[x][y] = count_x_o(new_x_o_matrix)
-                if check_win(new_x_o_matrix) == True:
-                    print('O wins')
-                    score_spot_dict[-10] = i
-                    return score_spot_dict
-                elif check_win(new_x_o_matrix) == 'True':
-                    print("O draw")
-                    score_spot_dict[0] = i
-                    return score_spot_dict
-                else:
-                    print("o khodesh sada za", i)
-                    score_list.append(system_difficult_choice(new_x_o_matrix))
-del_list = [['_', '_', '_'], ['_', '_', '_'], ['_', '_', '_']]
-new_matrix = del_list.copy()
+                score = minmax(new_x_o_matrix, depth + 1)
+                if '10' in score:
+                    score_dict[10].append(i)
+                elif '-10' in score:
+                    score_dict[-10].append(i)
+                elif '0' in score:
+                    score_dict[0].append(i)
+
+            new_x_o_matrix[x][y] = '_'
+        print()
+        if score_dict[10]:
+            return score_dict[10][0]
+        if score_dict[0]:
+            return score_dict[0][0]
+        return score_dict[-10][0]
+
+
+def system_very_difficult(new_x_o_matrix, str_):
+    x_y = system_difficult_choice(new_x_o_matrix, str_).split()
+    x = int(x_y[0])
+    y = int(x_y[1])
+    print('Making move level "hard"')
+    new_x_o_matrix[x][y] = str_
+    quit['exit1'] = True
+
 
 quit = {'exit': True, 'exit1': True}
 x_o_list = ()
 while quit['exit']:
     quit['exit1'] = True
     x_o_matrix = [['_', '_', '_'], ['_', '_', '_'], ['_', '_', '_']]
-    new_matrix = x_o_matrix.copy()
     what_to_do = input()
     if what_to_do == 'exit':
         quit['exit'] = False
         continue
+    elif what_to_do == 'start hard user':
+        prin_x_o(x_o_matrix)
+        while quit['exit1']:
+            system_very_difficult(x_o_matrix, 'X')
+            prin_x_o(x_o_matrix)
+            if not check_win(x_o_matrix):
+                while not player_choice(x_o_matrix):
+                    continue
+                prin_x_o(x_o_matrix)
+    elif what_to_do == 'start user hard':
+        prin_x_o(x_o_matrix)
+        while quit['exit1']:
+            if player_choice(x_o_matrix):
+                prin_x_o(x_o_matrix)
+                if not check_win(x_o_matrix):
+                    system_very_difficult(x_o_matrix, 'O')
+                    prin_x_o(x_o_matrix)
+                    check_win(x_o_matrix)
+
     elif what_to_do == 'start easy medium':
         prin_x_o(x_o_matrix)
         while quit['exit1']:
@@ -237,7 +307,6 @@ while quit['exit']:
                 system_medium_choice(x_o_matrix, 'O', 'X')
                 prin_x_o(x_o_matrix)
                 check_win(x_o_matrix)
-                
     elif what_to_do == 'start medium user':
         prin_x_o(x_o_matrix)
         while quit['exit1']:
@@ -295,74 +364,3 @@ while quit['exit']:
                     while not player_choice(x_o_matrix):
                         continue
                     prin_x_o(x_o_matrix)
-    elif what_to_do == 'start hard user':
-        prin_x_o(x_o_matrix)
-        while quit['exit1']:
-            system_medium_choice(x_o_matrix, 'X', 'O')
-            prin_x_o(x_o_matrix)
-            if not check_win(x_o_matrix):
-                while not player_choice(x_o_matrix):
-                    continue
-                prin_x_o(x_o_matrix)
-        
-    elif what_to_do == 'start user hard':
-        prin_x_o(x_o_matrix)
-        while quit['exit1']:
-            if player_choice(x_o_matrix):
-                prin_x_o(x_o_matrix)
-                if not check_win(x_o_matrix):
-                    system_medium_choice(x_o_matrix, 'O', 'X')
-                    prin_x_o(x_o_matrix)
-                    check_win(x_o_matrix)
-    elif what_to_do == 'start hard hard':
-        prin_x_o(x_o_matrix)
-        while quit['exit1']:
-            system_medium_choice(x_o_matrix, 'X', 'O')
-            prin_x_o(x_o_matrix)
-            if not check_win(x_o_matrix):
-                system_medium_choice(x_o_matrix, 'O', 'X')
-                prin_x_o(x_o_matrix)
-                check_win(x_o_matrix)
-    
-    elif what_to_do == 'start medium hard':
-        prin_x_o(x_o_matrix)
-        while quit['exit1']:
-            system_medium_choice(x_o_matrix, 'X', 'O')
-            prin_x_o(x_o_matrix)
-            if not check_win(x_o_matrix):
-                system_medium_choice(x_o_matrix, 'O', 'X')
-                prin_x_o(x_o_matrix)
-                check_win(x_o_matrix)
-    elif what_to_do == 'start hard medium':
-        prin_x_o(x_o_matrix)
-        while quit['exit1']:
-            system_medium_choice(x_o_matrix, 'X', 'O')
-            prin_x_o(x_o_matrix)
-            if not check_win(x_o_matrix):
-                system_medium_choice(x_o_matrix, 'O', 'X')
-                prin_x_o(x_o_matrix)
-                check_win(x_o_matrix)
-    elif what_to_do == 'start easy hard':
-        prin_x_o(x_o_matrix)
-        while quit['exit1']:
-            system_medium_choice(x_o_matrix, 'X', 'O')
-            prin_x_o(x_o_matrix)
-            if not check_win(x_o_matrix):
-                system_medium_choice(x_o_matrix, 'O', 'X')
-                prin_x_o(x_o_matrix)
-                check_win(x_o_matrix)
-    elif what_to_do == 'start hard easy':
-        prin_x_o(x_o_matrix)
-        while quit['exit1']:
-            system_medium_choice(x_o_matrix, 'X', 'O')
-            prin_x_o(x_o_matrix)
-            if not check_win(x_o_matrix):
-                system_medium_choice(x_o_matrix, 'O', 'X')
-                prin_x_o(x_o_matrix)
-                check_win(x_o_matrix)
-
-
-
-
-    else:
-        print('Bad parameters!')
